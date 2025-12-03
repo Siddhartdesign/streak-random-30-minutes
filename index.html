@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exercise Streak</title>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  background: #0f0f0f;
+  color: #e8e8e8;
+  text-align: center;
+}
+
+h1 {
+  margin: 20px 0 10px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* ----- MAIN BOX ----- */
+#container {
+  position: relative;
+  width: 90%;
+  max-width: 420px;
+  margin: 30px auto 10px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #1c1c1c;
+  padding: 20px 10px;
+  box-shadow: 0 0 30px rgba(255,0,0,0.15);
+}
+
+/* ----- RED FILL ----- */
+#background {
+  position: absolute;
+  bottom: 20px; /* matches container padding */
+  left: 10px;
+  width: calc(100% - 20px);
+  height: 0%;
+  background: linear-gradient(180deg, #ff5b5b, #ff0000);
+  transition: height 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: 10px;
+  z-index: 1;
+}
+
+/* ----- IMAGE ON TOP ----- */
+#image {
+  width: 100%;
+  height: auto;
+  z-index: 2;
+  position: relative;
+  border-radius: 10px;
+}
+
+/* ----- BUTTONS ----- */
+button {
+  margin: 10px 8px;
+  margin-top: 18px;
+  padding: 12px 28px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+#logBtn {
+  background: #ff3b3b;
+  color: white;
+}
+
+#resetBtn {
+  background: #333;
+  color: #eee;
+}
+
+/* ----- PROGRESS TEXT ----- */
+#progress {
+  margin-top: 10px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Exercise Streak</h1>
+
+<div id="container">
+  <div id="background"></div>
+  <img id="image" src="your-image.png" alt="Figure">
+</div>
+
+<div>
+  <button id="logBtn" onclick="logDay()">+ Log Day</button>
+  <button id="resetBtn" onclick="resetProgress()">Reset</button>
+</div>
+
+<div id="progress">Progress: 0%</div>
+
+<script>
+// ---- LOAD SAVED STATE ----
+let progress = parseFloat(localStorage.getItem('progress') || '0');
+let lastLoggedDate = localStorage.getItem('lastLoggedDate') || '';
+
+updateUI();
+
+// ---- MAIN LOGIC ----
+function logDay() {
+  const today = new Date().toISOString().split('T')[0];
+
+  if (lastLoggedDate === today) {
+    alert("You’ve already logged today’s exercise!");
+    return;
+  }
+
+  // each day = 1.19%
+  progress += (100 / 84);
+  if (progress > 100) progress = 100;
+
+  lastLoggedDate = today;
+  saveAndUpdate();
+}
+
+function resetProgress() {
+  if (confirm("Reset your streak?")) {
+    progress = 0;
+    lastLoggedDate = '';
+    saveAndUpdate();
+  }
+}
+
+function saveAndUpdate() {
+  localStorage.setItem('progress', progress);
+  localStorage.setItem('lastLoggedDate', lastLoggedDate);
+  updateUI();
+}
+
+function updateUI() {
+  const bg = document.getElementById('background');
+  bg.style.height = progress + '%';
+  document.getElementById('progress').innerText =
+    `Progress: ${progress.toFixed(1)}%`;
+}
+</script>
+
+</body>
+</html>
