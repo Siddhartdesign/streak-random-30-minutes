@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Exercise Streak</title>
+<title>Theseus Progress</title>
 
 <style>
 body {
   margin: 0;
-  padding: 0;
   font-family: "Inter", sans-serif;
   background: #0f0f0f;
   color: #e8e8e8;
@@ -21,45 +20,31 @@ h1 {
   font-weight: 600;
 }
 
-/* ----- MAIN BOX ----- */
 #container {
   position: relative;
   width: 90%;
   max-width: 420px;
-  margin: 30px auto 10px;
+  margin: 25px auto;
   border-radius: 20px;
   overflow: hidden;
   background: #1c1c1c;
-  padding: 20px 10px;
-  box-shadow: 0 0 30px rgba(255,0,0,0.15);
+  padding: 18px;
+  box-shadow: 0 0 40px rgba(255,255,255,0.08);
 }
 
-/* ----- RED FILL ----- */
-#background {
-  position: absolute;
-  bottom: 20px; /* matches container padding */
-  left: 10px;
-  width: calc(100% - 20px);
-  height: 0%;
-  background: linear-gradient(180deg, #ff5b5b, #ff0000);
-  transition: height 0.9s cubic-bezier(0.25, 0.1, 0.25, 1);
-  border-radius: 10px;
-  z-index: 1;
-}
-
-/* ----- IMAGE ON TOP ----- */
+/* IMAGE — filter-based reveal */
 #image {
   width: 100%;
   height: auto;
-  z-index: 2;
-  position: relative;
-  border-radius: 10px;
+  border-radius: 14px;
+  transition: 
+    filter 1.2s cubic-bezier(0.25, 0.1, 0.25, 1),
+    transform 0.6s ease;
 }
 
-/* ----- BUTTONS ----- */
+/* buttons */
 button {
   margin: 10px 8px;
-  margin-top: 18px;
   padding: 12px 28px;
   font-size: 15px;
   border-radius: 10px;
@@ -69,88 +54,141 @@ button {
   transition: transform 0.15s ease;
 }
 
-button:active {
-  transform: scale(0.95);
+button:active { transform: scale(0.95); }
+
+#logBtn { background: #ff3b3b; color: white; }
+#resetBtn { background: #333; color: #eee; }
+
+/* gentle denied pulse */
+.denied {
+  animation: deniedPulse 0.6s ease;
 }
 
-#logBtn {
-  background: #ff3b3b;
-  color: white;
+@keyframes deniedPulse {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(0.4); }
+  100% { filter: brightness(1); }
 }
 
-#resetBtn {
-  background: #333;
-  color: #eee;
+/* modal (for entering multiple days) */
+#modalOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(3px);
+  justify-content: center;
+  align-items: center;
 }
 
-/* ----- PROGRESS TEXT ----- */
-#progress {
-  margin-top: 10px;
-  font-size: 14px;
-  opacity: 0.85;
+#modal {
+  background: #1e1e1e;
+  padding: 20px 25px;
+  border-radius: 12px;
+  text-align: center;
+  width: 300px;
 }
+
+input {
+  width: 80%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  text-align: center;
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>Exercise Streak</h1>
+<h1>Theseus</h1>
 
 <div id="container">
-  <div id="background"></div>
-  <img id="image" src="your-image.png" alt="Figure">
+  <img id="image" src="Frame1.png" alt="Theseus">
 </div>
 
 <div>
-  <button id="logBtn" onclick="logDay()">+ Log Day</button>
+  <button id="logBtn" onclick="openModal()">+ Log Workouts</button>
   <button id="resetBtn" onclick="resetProgress()">Reset</button>
 </div>
 
 <div id="progress">Progress: 0%</div>
 
+<!-- Modal -->
+<div id="modalOverlay">
+  <div id="modal">
+    <h3>How many workouts?</h3>
+    <input id="daysInput" type="number" min="1" placeholder="e.g., 3">
+    <button onclick="submitDays()" style="background:#ff3b3b;color:white;">Confirm</button>
+    <button onclick="closeModal()" style="background:#444;color:#ddd;">Cancel</button>
+  </div>
+</div>
+
 <script>
-// ---- LOAD SAVED STATE ----
 let progress = parseFloat(localStorage.getItem('progress') || '0');
-let lastLoggedDate = localStorage.getItem('lastLoggedDate') || '';
+updateImage();
 
-updateUI();
+function openModal() {
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
 
-// ---- MAIN LOGIC ----
-function logDay() {
-  const today = new Date().toISOString().split('T')[0];
+function closeModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  document.getElementById('daysInput').value = '';
+}
 
-  if (lastLoggedDate === today) {
-    alert("You’ve already logged today’s exercise!");
-    return;
-  }
+function submitDays() {
+  let val = parseInt(document.getElementById('daysInput').value);
+  if (!val || val < 1) { deniedFlash(); return; }
 
-  // each day = 1.19%
-  progress += (100 / 84);
+  progress += val * (100 / 84); // 84-day logic
   if (progress > 100) progress = 100;
 
-  lastLoggedDate = today;
-  saveAndUpdate();
+  saveProgress();
+  closeModal();
 }
 
 function resetProgress() {
-  if (confirm("Reset your streak?")) {
+  if (confirm("Reset your progress?")) {
     progress = 0;
-    lastLoggedDate = '';
-    saveAndUpdate();
+    saveProgress();
   }
 }
 
-function saveAndUpdate() {
+function saveProgress() {
   localStorage.setItem('progress', progress);
-  localStorage.setItem('lastLoggedDate', lastLoggedDate);
-  updateUI();
+  updateImage();
 }
 
-function updateUI() {
-  const bg = document.getElementById('background');
-  bg.style.height = progress + '%';
-  document.getElementById('progress').innerText =
-    `Progress: ${progress.toFixed(1)}%`;
+function deniedFlash() {
+  const img = document.getElementById('image');
+  img.classList.add('denied');
+  setTimeout(() => img.classList.remove('denied'), 600);
+}
+
+function updateImage() {
+  const img = document.getElementById('image');
+  const pct = Math.min(Math.max(progress, 0), 100) / 100;
+
+  // Combination Animation
+  const blurVal = 8 - pct * 8;              // 8px → 0px
+  const grayVal = 100 - pct * 100;          // 100% → 0%
+  const contrastVal = 60 + pct * 40;        // 60% → 100%
+  const brightVal = 0.6 + pct * 0.4;        // 0.6 → 1.0
+  const pixelVal = Math.max(1, 20 - pct * 20); // pixelation (custom trick)
+
+  img.style.filter = `
+    blur(${blurVal}px)
+    grayscale(${grayVal}%)
+    contrast(${contrastVal}%)
+    brightness(${brightVal})
+  `;
+
+  document.getElementById('progress').innerText = 
+    "Progress: " + progress.toFixed(1) + "%";
 }
 </script>
 
